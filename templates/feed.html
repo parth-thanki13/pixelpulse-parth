@@ -48,7 +48,7 @@
                             <span class="fw-bold">{{ comment.user.username }}</span> 
                             {{ comment.text.split('[AI:')[0] }}
                             {% if "[AI: Positive]" in comment.text %}
-                                <i class="fas fa-circle text-success ms-1" style="font-size: 6px;" title="AI: Positive Sentiment"></i>
+                                <i class="fas fa-circle text-success ms-1" style="font-size: 6px;"></i>
                             {% endif %}
                         </div>
                     {% endfor %}
@@ -68,13 +68,13 @@
 </div>
 
 <script>
-// Like Functionality without refresh
+// Like Logic (AJAX)
 function toggleLike(photoId) {
     fetch(`/like/${photoId}`, { method: 'POST' })
     .then(res => res.json())
     .then(data => {
         if (data.error) {
-            alert(data.error); // Show error if Creator tries to like
+            alert(data.error); 
         } else {
             const btn = document.getElementById(`like-btn-${photoId}`);
             const countLabel = document.getElementById(`like-count-${photoId}`);
@@ -90,7 +90,7 @@ function toggleLike(photoId) {
     });
 }
 
-// Comment Functionality with AI Sentiment
+// Comment Logic (AJAX)
 function submitComment(event, photoId) {
     event.preventDefault();
     const input = document.getElementById(`comment-input-${photoId}`);
@@ -107,14 +107,14 @@ function submitComment(event, photoId) {
     .then(data => {
         if (data.success) {
             const list = document.getElementById(`comments-list-${photoId}`);
-            const newComment = document.createElement('div');
-            newComment.className = 'mb-1';
-            let sentimentIcon = data.sentiment === 'positive' ? '<i class="fas fa-circle text-success ms-1" style="font-size: 6px;"></i>' : '';
-            newComment.innerHTML = `<span class="fw-bold">${data.username}</span> ${data.text} ${sentimentIcon}`;
-            list.appendChild(newComment);
+            const newDiv = document.createElement('div');
+            newDiv.className = 'mb-1';
+            let icon = data.sentiment === 'positive' ? '<i class="fas fa-circle text-success ms-1" style="font-size: 6px;"></i>' : '';
+            newDiv.innerHTML = `<span class="fw-bold">${data.username}</span> ${data.text} ${icon}`;
+            list.appendChild(newDiv);
             input.value = '';
         } else {
-            alert(data.message); // Show error for negative/blocked content
+            alert(data.message);
         }
     });
 }
