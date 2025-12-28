@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h1 style="font-family: 'Grand Hotel', cursive; font-size: 3rem; margin-bottom: 30px;">PhotoShare</h1>
+        
+        <form method="POST">
+            <div class="mb-2">
+                <input type="text" name="username" class="form-control" placeholder="Username" required>
+            </div>
+            
+            <div class="mb-3">
+                <input type="password" name="password" class="form-control" placeholder="Password" required>
+            </div>
+
+            <div class="mb-3">
+                <select name="role" class="form-select form-control text-muted" style="font-size: 13px;" required>
+                    <option value="" disabled selected>Select Login Role</option>
+                    <option value="consumer">Consumer</option>
+                    <option value="creator">Creator</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 fw-bold py-1">Log In</button>
+        </form>
+
+        <div class="d-flex align-items-center my-3">
+            <div class="border-bottom flex-grow-1"></div>
+            <span class="mx-3 text-muted fw-bold small">OR</span>
+            <div class="border-bottom flex-grow-1"></div>
+        </div>
+        <a href="#" class="text-primary fw-bold text-decoration-none small">Forgot password?</a>
+    </div>
+    
+    <div class="auth-card mt-3 py-3" style="padding: 20px 0;">
+        <p class="text-sm text-dark mb-0">Don't have an account? <a href="{{ url_for('register') }}" class="fw-bold text-primary text-decoration-none">Sign up</a></p>
+    </div>
+</div>
+{% endblock %}

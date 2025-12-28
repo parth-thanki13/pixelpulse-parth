@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhotoShare</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Grand+Hotel&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand fixed-top shadow-sm">
+        <div class="container" style="max-width: 935px;">
+            <a class="navbar-brand" href="{{ url_for('home') }}">PhotoShare</a>
+            
+            <div class="d-flex align-items-center gap-3">
+                {% if current_user.is_authenticated %}
+                    
+                    <form action="{{ url_for('feed') }}" method="get" class="d-none d-md-block me-2">
+                        <div class="input-group">
+                            <span class="input-group-text border-0 bg-light text-muted pe-0"><i class="fas fa-search small"></i></span>
+                            <input type="search" name="q" class="form-control border-0 bg-light shadow-none search-input" placeholder="Search..." style="background: transparent;">
+                        </div>
+                    </form>
+
+                    <a href="{{ url_for('feed') }}" class="nav-link {{ 'active' if request.endpoint == 'feed' else '' }}" title="Home">
+                        <i class="fas fa-home"></i>
+                    </a>
+                    
+                    {% if current_user.role == 'creator' %}
+                    <a href="{{ url_for('creator_dashboard') }}" class="nav-link {{ 'active' if request.endpoint == 'creator_dashboard' else '' }}" title="Upload">
+                        <i class="{{ 'fas' if request.endpoint == 'creator_dashboard' else 'far' }} fa-plus-square"></i>
+                    </a>
+                    {% endif %}
+
+                    <div class="dropdown">
+                        <a href="#" class="nav-link d-flex align-items-center p-0" data-bs-toggle="dropdown">
+                            <div class="nav-avatar-container">
+                                {% if current_user.avatar %}
+                                    <img src="{{ url_for('static', filename='uploads/' + current_user.avatar) }}" class="nav-avatar object-fit-cover">
+                                {% else %}
+                                    <i class="fas fa-user-circle" style="font-size: 1.6rem;"></i>
+                                {% endif %}
+                            </div>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-3 p-2 rounded-3">
+                            <li>
+                                <a class="dropdown-item fw-bold rounded py-2" href="{{ url_for('profile', username=current_user.username) }}">
+                                    <i class="far fa-user-circle me-2"></i> Profile
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger rounded py-2" href="{{ url_for('logout') }}">
+                                    Log Out
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-primary btn-sm px-4 fw-bold rounded-pill">Log In</a>
+                    <a href="{{ url_for('register') }}" class="text-primary fw-bold text-decoration-none small ms-3">Sign Up</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="max-width: 935px; margin-top: 80px; padding-bottom: 50px;">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show py-2 small shadow-sm rounded-3 border-0" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close btn-close-white small" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

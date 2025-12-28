@@ -1,0 +1,10 @@
+flask
+flask-sqlalchemy
+flask-login
+werkzeug
+azure-storage-blob
+psycopg2-binary
+textblob
+Pillow
+python-dotenv
+gunicorn

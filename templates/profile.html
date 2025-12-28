@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+        
+        <div class="profile-header">
+            <div class="profile-avatar-wrapper">
+                {% if user.avatar %}
+                    <img src="{{ url_for('static', filename='uploads/' + user.avatar) }}" class="profile-avatar object-fit-cover">
+                {% else %}
+                    <i class="fas fa-user-circle text-muted" style="font-size: 150px;"></i>
+                {% endif %}
+            </div>
+            
+            <div class="profile-info">
+                <div class="d-flex align-items-center mb-3 flex-wrap gap-3">
+                    <h2 class="profile-username mb-0">{{ user.username }}</h2>
+                    
+                    {% if current_user.id == user.id %}
+                        <a href="{{ url_for('edit_profile') }}" class="btn btn-light border">Edit Profile</a>
+                    {% else %}
+                        {% if current_user.role == 'consumer' %}
+                            {% if current_user.is_following(user) %}
+                                <a href="{{ url_for('follow_user', username=user.username) }}" class="btn btn-light border">Unfollow</a>
+                            {% else %}
+                                <a href="{{ url_for('follow_user', username=user.username) }}" class="btn btn-primary btn-sm">Follow</a>
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+                </div>
+                
+                <div class="profile-stats mb-3">
+                    <span><strong>{{ photos|length }}</strong> posts</span>
+                    <span><strong>{{ user.followers.count() }}</strong> followers</span>
+                    <span><strong>{{ user.followed.count() }}</strong> following</span>
+                </div>
+                
+                <div class="small">
+                    <strong class="text-dark">{{ user.role.title() }}</strong> <br>
+                    <p class="mb-0" style="white-space: pre-wrap;">{{ user.bio or '' }}</p>
+                </div>
+            </div>
+        </div>
+
+        <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="posts-tab" data-bs-toggle="tab" data-bs-target="#posts" type="button" role="tab">
+                    <i class="fas fa-th me-1"></i> Posts
+                </button>
+            </li>
+            
+            {% if current_user.id == user.id and current_user.role == 'consumer' %}
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="saved-tab" data-bs-toggle="tab" data-bs-target="#saved" type="button" role="tab">
+                    <i class="far fa-bookmark me-1"></i> Saved
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="liked-tab" data-bs-toggle="tab" data-bs-target="#liked" type="button" role="tab">
+                    <i class="far fa-heart me-1"></i> Liked
+                </button>
+            </li>
+            {% endif %}
+        </ul>
+
+        <div class="tab-content" id="profileTabsContent">
+            
+            <div class="tab-pane fade show active" id="posts" role="tabpanel">
+                <div class="row row-cols-3 g-1 g-md-4 mt-1">
+                    {% for photo in photos %}
+                    <div class="col">
+                        <div class="profile-grid-item">
+                            <img src="{{ photo.filename }}" class="w-100 h-100 object-fit-cover">
+                            <div class="profile-overlay">
+                                <span><i class="fas fa-heart me-1"></i> {{ photo.likes.count() }}</span>
+                                <span class="ms-3"><i class="fas fa-comment me-1"></i> {{ photo.comments.count() }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="col-12 text-center py-5 text-muted">
+                        <i class="fas fa-camera fa-2x mb-3"></i>
+                        <h5>No Photos Yet</h5>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {% if current_user.id == user.id and current_user.role == 'consumer' %}
+            <div class="tab-pane fade" id="saved" role="tabpanel">
+                <div class="row row-cols-3 g-1 g-md-4 mt-1">
+                    {% for photo in saved_photos %}
+                    <div class="col">
+                        <div class="profile-grid-item">
+                            <img src="{{ photo.filename }}" class="w-100 h-100 object-fit-cover">
+                            <div class="profile-overlay">
+                                <span><i class="fas fa-heart me-1"></i> {{ photo.likes.count() }}</span>
+                                <span class="ms-3"><i class="fas fa-comment me-1"></i> {{ photo.comments.count() }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="col-12 text-center py-5 text-muted">
+                        <i class="far fa-bookmark fa-2x mb-3"></i>
+                        <h5>Save Photos</h5>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="liked" role="tabpanel">
+                <div class="row row-cols-3 g-1 g-md-4 mt-1">
+                    {% for photo in liked_photos %}
+                    <div class="col">
+                        <div class="profile-grid-item">
+                            <img src="{{ photo.filename }}" class="w-100 h-100 object-fit-cover">
+                            <div class="profile-overlay">
+                                <span><i class="fas fa-heart me-1"></i> {{ photo.likes.count() }}</span>
+                                <span class="ms-3"><i class="fas fa-comment me-1"></i> {{ photo.comments.count() }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="col-12 text-center py-5 text-muted">
+                        <i class="far fa-heart fa-2x mb-3"></i>
+                        <h5>No Liked Photos</h5>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<script>
+    const tabs = document.querySelectorAll('.nav-link');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            // Remove active class from all tabs
+            tabs.forEach(t => { 
+                t.classList.remove('active'); 
+                t.classList.add('text-muted');
+            });
+            // Add active to clicked
+            this.classList.remove('text-muted');
+            this.classList.add('active');
+        });
+    });
+</script>
+{% endblock %}
