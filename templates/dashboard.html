@@ -1,45 +1,25 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="row justify-content-center mt-4">
-    <div class="col-md-8 col-lg-6">
-        <div class="post-card shadow-sm">
-            <div class="card-header bg-white text-center py-3 border-bottom"><h5 class="mb-0 fw-bold">Create New Post</h5></div>
-            <div class="card-body p-4">
-                <form method="POST" enctype="multipart/form-data">
-                    <div class="text-center mb-4 p-5 border-2 border-dashed rounded" style="background-color: #f8f9fa; border-style: dashed; border-color: #dbdbdb;">
-                        <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
-                        <p class="text-muted mb-3 small">Drag photos here</p>
-                        <input type="file" name="photo" class="form-control" required accept="image/*">
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label fw-bold small text-muted">Title</label>
-                        <input type="text" name="title" class="form-control bg-light" placeholder="e.g. Summer Trip" required>
-                    </div>
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-5">
+        <div class="card border p-4 text-center">
+            <h5 class="fw-bold mb-4">Create New Post</h5>
+            <form method="POST" enctype="multipart/form-data">
+                <div class="mb-4 p-5 border border-2 border-dashed rounded bg-light">
+                    <i class="far fa-images fs-1 text-muted mb-3"></i>
+                    <input type="file" name="photo" class="form-control form-control-sm" required>
+                </div>
+                
+                <input type="text" name="title" class="form-control mb-2" placeholder="Title" required>
+                <textarea name="caption" class="form-control mb-3" placeholder="Write a caption..."></textarea>
+                
+                <div class="row g-2 mb-3">
+                    <div class="col"><input type="text" name="location" class="form-control" placeholder="Location"></div>
+                    <div class="col"><input type="text" name="people" class="form-control" placeholder="Tag People"></div>
+                </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-bold small text-muted">Caption</label>
-                        <textarea name="caption" class="form-control bg-light" rows="2" placeholder="Write a caption..."></textarea>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold small text-muted">Location</label>
-                                <input type="text" name="location" class="form-control bg-light" placeholder="Where was this?">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold small text-muted">People Present</label>
-                                <input type="text" name="people" class="form-control bg-light" placeholder="e.g. Ali, Sara">
-                            </div>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary w-100 py-2">Share</button>
-                </form>
-            </div>
+                <button type="submit" class="btn btn-primary w-100 fw-bold">Share to Feed</button>
+            </form>
         </div>
     </div>
 </div>

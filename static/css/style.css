@@ -1,171 +1,82 @@
-/* --- Global Variables --- */
+/* --- PixelPulse: Ultra-Unique Glassmorphism Theme --- */
 :root {
-    --bg-color: #fafafa;
-    --card-bg: #ffffff;
-    --primary-color: #0095f6;
-    --primary-hover: #1877f2;
-    --text-dark: #262626;
-    --text-muted: #8e8e8e;
-    --border-color: #dbdbdb;
-    --nav-height: 60px;
-    --instagram-gradient: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-}
-
-/* --- BASE STYLES --- */
-html {
-    scroll-behavior: smooth;
+    /* Background: Modern Mesh Gradient (Not plain white) */
+    --bg-gradient: radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%), 
+                   radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.15) 0px, transparent 50%), 
+                   radial-gradient(at 100% 100%, rgba(244, 63, 94, 0.1) 0px, transparent 50%), 
+                   radial-gradient(at 0% 100%, rgba(139, 92, 246, 0.15) 0px, transparent 50%);
+    
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --primary-teal: #0d9488;
+    --text-main: #1e293b;
+    --border-glass: rgba(255, 255, 255, 0.3);
 }
 
 body {
-    background-color: var(--bg-color);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    color: var(--text-dark);
-    font-size: 14px;
-    line-height: 1.4;
-    overflow-y: scroll; /* Prevents layout shift */
+    background-color: #f8fafc !important; 
+    background-image: var(--bg-gradient) !important;
+    background-attachment: fixed;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
 }
 
-/* --- STABLE NAVBAR (No Bouncing) --- */
+/* --- UNIQUE FLOATING ICONS BACKGROUND --- */
+body::before {
+    content: "\f030"; /* Camera Icon */
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    position: fixed;
+    top: 10%; left: 5%;
+    font-size: 15rem;
+    color: rgba(13, 148, 136, 0.03);
+    z-index: -1;
+}
+
+body::after {
+    content: "\f012"; /* Signal/Pulse Icon */
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    position: fixed;
+    bottom: 5%; right: 5%;
+    font-size: 18rem;
+    color: rgba(99, 102, 241, 0.03);
+    z-index: -1;
+}
+
+/* --- GLASS CARD EFFECT --- */
+.auth-card, .post-card, .card {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(12px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(12px) saturate(180%) !important;
+    border: 1px solid var(--border-glass) !important;
+    border-radius: 24px !important; /* Extra Rounded */
+    box-shadow: 0 20px 40px rgba(0,0,0,0.08) !important;
+}
+
+/* --- NAVBAR UPGRADE --- */
 .navbar {
-    background-color: rgba(255, 255, 255, 0.97) !important; /* Solid but slight glass */
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--border-color);
-    height: var(--nav-height);
-    padding: 0;
-    position: fixed; /* Strictly Fixed */
-    top: 0;
-    width: 100%;
-    z-index: 1000;
+    background: rgba(255, 255, 255, 0.7) !important;
+    backdrop-filter: blur(20px) !important;
+    border-bottom: 1px solid var(--border-glass) !important;
 }
 
-/* Logo Styling */
-.navbar-brand {
-    font-family: 'Grand Hotel', cursive;
-    font-size: 2.2rem;
-    margin-top: 5px;
-    background: var(--instagram-gradient);
-    -webkit-background-clip: text;
-    background-clip: text; /* Standard property added to fix warning */
-    -webkit-text-fill-color: transparent;
-    display: inline-block;
-    cursor: pointer;
-    transition: transform 0.2s ease;
-}
-
-.navbar-brand:hover {
-    opacity: 0.8; /* Simple fade */
-}
-
-/* Navbar Icons (Stable) */
-.navbar .nav-link {
-    color: var(--text-dark) !important;
-    font-size: 1.6rem;
-    padding: 0 14px !important;
-    position: relative;
-    transition: color 0.2s ease; /* Only color changes */
-}
-
-/* Simple Color Change on Hover (No Movement) */
-.navbar .nav-link:hover {
-    color: var(--primary-color) !important;
-    transform: none; /* Prevents jumping */
-}
-
-/* Active Dot Logic */
-.navbar .nav-link.active::after {
-    content: '';
-    position: absolute;
-    bottom: -4px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 4px;
-    height: 4px;
-    background: var(--primary-color); /* Simple Red/Blue dot */
-    border-radius: 50%;
-}
-
-/* Avatar Border */
-.nav-avatar-container {
-    padding: 2px;
-    background: transparent;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    transition: border 0.2s ease;
-}
-.navbar .nav-link:hover .nav-avatar-container, 
-.navbar .nav-link.active .nav-avatar-container {
-    background: var(--text-dark); /* Simple dark ring on hover */
-}
-.nav-avatar { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #fff; object-fit: cover; }
-
-/* --- SEARCH BAR --- */
-.search-input {
-    background-color: #efefef;
-    border: 1px solid transparent;
-    border-radius: 8px;
-    padding: 8px 15px;
-    font-size: 14px;
-    width: 250px;
-    transition: all 0.2s ease;
-}
-.search-input:focus {
-    background-color: #fff;
-    border-color: #dbdbdb;
-    width: 250px; /* Keep width stable */
-    outline: none;
-}
-
-/* --- PROFILE PAGE TABS (Small & Instagram Style) --- */
-.nav-tabs {
-    border-bottom: none;
-    border-top: 1px solid var(--border-color);
-    margin-top: 20px;
-    display: flex;
-    justify-content: center;
-    gap: 50px;
-}
-
-.nav-tabs .nav-link {
-    font-size: 12px !important;
-    font-weight: 600;
-    letter-spacing: 1px;
-    color: #8e8e8e !important; /* Muted Grey */
+/* --- PREMIUM BUTTONS --- */
+.btn-primary {
+    background: linear-gradient(135deg, #0d9488, #10b981) !important;
     border: none !important;
-    border-top: 1px solid transparent !important;
-    border-radius: 0 !important;
-    padding: 15px 0 !important;
-    background: transparent !important;
-    margin: 0 !important;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    text-transform: uppercase;
+    border-radius: 14px !important;
+    box-shadow: 0 10px 20px rgba(13, 148, 136, 0.2) !important;
+    transition: all 0.3s ease !important;
 }
 
-/* Active Tab (Black Border Top) */
-.nav-tabs .nav-link.active {
-    color: #262626 !important;
-    border-top: 1px solid #262626 !important;
+.btn-primary:hover {
+    transform: translateY(-3px) scale(1.02) !important;
+    box-shadow: 0 15px 30px rgba(13, 148, 136, 0.3) !important;
 }
 
-.nav-tabs .nav-link i { font-size: 12px !important; }
-.nav-tabs .nav-link:hover { color: #262626 !important; }
-
-/* --- GENERAL UI (Clean Cards) --- */
-.auth-container { max-width: 350px; margin: 40px auto; }
-.auth-card { background: #fff; padding: 40px; border: 1px solid var(--border-color); text-align: center; }
-.form-control { background-color: #fafafa; border: 1px solid #dbdbdb; border-radius: 3px; padding: 9px; font-size: 14px; }
-.form-control:focus { border-color: #a8a8a8; box-shadow: none; background: #fff; }
-
-.post-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 20px; }
-.post-header { padding: 14px 16px; background: #fff; border-bottom: 1px solid #efefef; display: flex; align-items: center; justify-content: space-between; }
-.post-img { width: 100%; height: auto; display: block; }
-
-.action-icon { font-size: 1.6rem; color: var(--text-dark); cursor: pointer; transition: opacity 0.2s; }
-.action-icon:hover { opacity: 0.6; } /* Simple fade */
-.caption-text { font-size: 14px; overflow-wrap: break-word; }
-
-.object-fit-cover { object-fit: cover; }
-.profile-grid-item { position: relative; cursor: pointer; overflow: hidden; }
-.profile-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); opacity: 0; transition: opacity 0.2s; display: flex; gap: 15px; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.2rem; }
-.profile-grid-item:hover .profile-overlay { opacity: 1; }
+/* --- INPUTS --- */
+.form-control {
+    background: rgba(255, 255, 255, 0.5) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 12px !important;
+}

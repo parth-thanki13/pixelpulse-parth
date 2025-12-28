@@ -20,7 +20,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'mysupersecretkeyIsVeryLongAndSecure')
 
 # --- DATABASE CONFIGURATION (Azure PostgreSQL) ---
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DB_URI')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DB_URI') #'sqlite:///pixelpulse.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # --- AZURE BLOB STORAGE CONFIGURATION ---
@@ -234,6 +234,7 @@ def add_comment(photo_id):
     return jsonify({'success': True, 'username': current_user.username, 'text': clean_text, 'sentiment': sentiment_type})
 
 # --- UPDATED REGISTRATION ROUTE (CLEANED UP) ---
+# --- UPDATED REGISTRATION ROUTE FOR PARTH (ROLE ENABLED) ---
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated: return redirect(url_for('feed'))
@@ -241,21 +242,22 @@ def register():
         username = request.form.get('username')
         password = request.form.get('password')
         
-        # --- PREVIOUS LOGIC COMMENTED OUT FOR ASSIGNMENT COMPLIANCE ---
-        # role = request.form.get('role', 'consumer') 
+        # User ko role select karne ki ijazat dein (Consumer ya Creator)
+        role = request.form.get('role', 'consumer') 
         
         if User.query.filter_by(username=username).first():
-            flash('Username taken', 'danger')
+            flash('Username already taken. Please choose another.', 'danger')
             return redirect(url_for('register'))
         
-        # Always default to 'consumer' for public registration
-        new_user = User(username=username, 
-                        password=generate_password_hash(password), 
-                        role='consumer') 
+        new_user = User(
+            username=username, 
+            password=generate_password_hash(password), 
+            role=role
+        ) 
         
         db.session.add(new_user)
         db.session.commit()
-        flash('Account created! Please Log In.', 'success')
+        flash(f'Account created successfully as {role.title()}!', 'success')
         return redirect(url_for('login')) 
     return render_template('register.html')
 
@@ -295,4 +297,4 @@ def logout():
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port, debug=True)
