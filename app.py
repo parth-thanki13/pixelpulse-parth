@@ -20,7 +20,8 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'mysupersecretkeyIsVeryLongAndSecure')
 
 # --- DATABASE CONFIGURATION (Azure PostgreSQL) ---
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DB_URI') #'sqlite:///pixelpulse.db'
+# Azure environment variables se DB_URI leta hai
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DB_URI') 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # --- AZURE BLOB STORAGE CONFIGURATION ---
@@ -77,8 +78,7 @@ def analyze_image(img_obj):
         
         # Quality Analysis
         width, height = img_obj.size
-        if width * height > 1000000: tags.append("HD ᴴᴰ")
-        else: tags.append("SD")
+        tags.append("HD ᴴᴰ" if width * height > 1000000 else "SD")
 
         # Brightness Analysis
         stat = ImageStat.Stat(img_obj.convert('L'))
@@ -89,8 +89,7 @@ def analyze_image(img_obj):
 
         # Color Analysis
         img_small = img_obj.resize((1, 1))
-        color = img_small.getpixel((0, 0))
-        r, g, b = color
+        r, g, b = img_small.getpixel((0, 0))
         if r > g and r > b: tags.append("Warm Tone 🔴")
         elif b > r and b > g: tags.append("Cool Tone 🔵")
         else: tags.append("Balanced Color 🎨")
@@ -142,17 +141,10 @@ def creator_dashboard():
     if request.method == 'POST':
         file = request.files.get('photo')
         title = request.form.get('title')
-        caption = request.form.get('caption')
-        people = request.form.get('people')
-        location = request.form.get('location')
-        
         if file and title and file.filename != '':
             filename = secure_filename(file.filename)
-            
             try:
                 img = Image.open(file)
-                if img.mode != 'RGB': img = img.convert('RGB')
-                
                 auto_tags = analyze_image(img)
                 img.thumbnail((1080, 1080))
                 
@@ -160,21 +152,21 @@ def creator_dashboard():
                 img.save(in_mem_file, format='JPEG', optimize=True, quality=85)
                 in_mem_file.seek(0)
                 
+                # Azure Upload Logic
                 blob_name = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{filename}"
                 blob_client = blob_service_client.get_blob_client(container=AZURE_CONTAINER_NAME, blob=blob_name)
                 blob_client.upload_blob(in_mem_file, overwrite=True)
                 
-                file_url = blob_client.url
-                
-                new_photo = Photo(filename=file_url, title=title, caption=caption, 
-                                  location=location, people_present=people, 
+                new_photo = Photo(filename=blob_client.url, title=title, 
+                                  caption=request.form.get('caption'), 
+                                  location=request.form.get('location'), 
+                                  people_present=request.form.get('people'), 
                                   auto_tags=auto_tags, user_id=current_user.id)
                                   
                 db.session.add(new_photo)
                 db.session.commit()
                 flash('Photo Uploaded to Azure successfully!', 'success')
                 return redirect(url_for('profile', username=current_user.username))
-                
             except Exception as e:
                 flash(f"Azure Upload Error: {str(e)}", 'danger')
                 
@@ -183,7 +175,10 @@ def creator_dashboard():
 @app.route('/like/<int:photo_id>', methods=['POST'])
 @login_required
 def toggle_like(photo_id):
-    if current_user.role == 'creator': return jsonify({'liked': False, 'error': 'Creators cannot like'})
+    # Restriction: Creators cannot like photos
+    if current_user.role == 'creator': 
+        return jsonify({'liked': False, 'error': 'Creators cannot like photos.'})
+        
     photo = Photo.query.get_or_404(photo_id)
     existing_like = Like.query.filter_by(user_id=current_user.id, photo_id=photo_id).first()
     liked = False
@@ -233,8 +228,6 @@ def add_comment(photo_id):
     clean_text = text.split('[AI:')[0]
     return jsonify({'success': True, 'username': current_user.username, 'text': clean_text, 'sentiment': sentiment_type})
 
-# --- UPDATED REGISTRATION ROUTE (CLEANED UP) ---
-# --- UPDATED REGISTRATION ROUTE (RESTRICTED TO CONSUMER) ---
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated: return redirect(url_for('feed'))
@@ -242,18 +235,16 @@ def register():
         username = request.form.get('username')
         password = request.form.get('password')
         
-        # Registration ab sirf 'consumer' ke liye hai
+        # Public registration sirf 'consumer' ke liye hai
         role = 'consumer' 
         
         if User.query.filter_by(username=username).first():
-            flash('Username already taken. Please choose another.', 'danger')
+            flash('Username already taken.', 'danger')
             return redirect(url_for('register'))
         
-        new_user = User(
-            username=username, 
-            password=generate_password_hash(password), 
-            role=role
-        ) 
+        new_user = User(username=username, 
+                        password=generate_password_hash(password), 
+                        role=role) 
         
         db.session.add(new_user)
         db.session.commit()
@@ -297,4 +288,4 @@ def logout():
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(host='0.0.0.0', port=port)
