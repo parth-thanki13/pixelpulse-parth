@@ -8,3 +8,6 @@ textblob
 Pillow
 python-dotenv
 gunicorn
+psycopg2-binary
+azure-storage-blob
+Pillow
