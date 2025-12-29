@@ -6,13 +6,13 @@
         <div class="card mb-4 border-1 rounded-1 bg-white shadow-none">
             <div class="p-3 d-flex align-items-center justify-content-between">
                 <div class="d-flex align-items-center gap-2">
-                    <a href="{{ url_for('profile', username=photo.author.username) }}">
+                    <a href="{{ url_for('profile', username=photo.creator.username) }}">
                         <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center border" style="width: 32px; height: 32px; font-size: 12px;">
-                            {{ photo.author.username[0].upper() }}
+                            {{ photo.creator.username[0].upper() }}
                         </div>
                     </a>
-                    <a href="{{ url_for('profile', username=photo.author.username) }}" class="fw-bold text-dark text-decoration-none small">
-                        {{ photo.author.username }}
+                    <a href="{{ url_for('profile', username=photo.creator.username) }}" class="fw-bold text-dark text-decoration-none small">
+                        {{ photo.creator.username }}
                     </a>
                     {% if photo.location %}<span class="text-muted small">• {{ photo.location }}</span>{% endif %}
                 </div>
@@ -26,19 +26,18 @@
                     <i id="like-btn-{{ photo.id }}" 
                        class="{{ 'fas text-danger' if is_liked else 'far' }} fa-heart fs-4 cursor-pointer" 
                        onclick="toggleLike('{{ photo.id }}')"></i>
-                    
                     <i class="far fa-comment fs-4 cursor-pointer" onclick="document.getElementById('comment-input-{{ photo.id }}').focus()"></i>
                 </div>
 
                 <p class="fw-bold small mb-2"><span id="like-count-{{ photo.id }}">{{ photo.likes.count() }}</span> likes</p>
                 
                 <div class="small mb-3">
-                    <span class="fw-bold">{{ photo.author.username }}</span> 
+                    <span class="fw-bold">{{ photo.creator.username }}</span> 
                     <span class="fw-bold ms-1">{{ photo.title }}</span>
                     <p class="text-muted mb-1">{{ photo.caption }}</p>
                     {% if photo.auto_tags %}
                         <span class="badge bg-light text-dark border-0 p-0 text-muted" style="font-size: 10px;">
-                            <i class="fas fa-robot me-1"></i> AI: {{ photo.auto_tags }}
+                            <i class="fas fa-robot me-1"></i> AI Analysis: {{ photo.auto_tags }}
                         </span>
                     {% endif %}
                 </div>
@@ -48,7 +47,9 @@
                         <div class="mb-1">
                             <span class="fw-bold">{{ comment.user.username }}</span> 
                             {{ comment.text.split('[AI:')[0] }}
-                            {% if "[AI: Positive]" in comment.text %}<i class="fas fa-circle text-success ms-1" style="font-size: 6px;"></i>{% endif %}
+                            {% if "[AI: Positive]" in comment.text %}
+                                <i class="fas fa-circle text-success ms-1" style="font-size: 6px;"></i>
+                            {% endif %}
                         </div>
                     {% endfor %}
                 </div>
@@ -71,9 +72,8 @@ function toggleLike(photoId) {
     fetch(`/like/${photoId}`, { method: 'POST' })
     .then(res => res.json())
     .then(data => {
-        if (data.error) {
-            alert(data.error);
-        } else {
+        if (data.error) { alert(data.error); }
+        else {
             const btn = document.getElementById(`like-btn-${photoId}`);
             const countLabel = document.getElementById(`like-count-${photoId}`);
             if (data.liked) {
