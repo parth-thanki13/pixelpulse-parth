@@ -11,6 +11,14 @@ from PIL import Image, ImageStat
 from dotenv import load_dotenv
 from azure.storage.blob import BlobServiceClient
 
+# --- NLTK FIX FOR AZURE (Internal Server Error Hal Karne Ke Liye) ---
+import nltk
+try:
+    nltk.download('punkt_tab') #
+    nltk.download('brown')     #
+except Exception as e:
+    print(f"NLTK Download Warning: {e}")
+
 # .env file se variables load karein
 load_dotenv()
 
@@ -18,33 +26,30 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'mysupersecretkeyIsVeryLongAndSecure')
 
 # --- DATABASE CONFIGURATION (Azure PostgreSQL) ---
-# DB_URI variable Azure Portal se liya jayega
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DB_URI')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DB_URI') #
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # --- AZURE BLOB STORAGE CONFIGURATION ---
 AZURE_CONNECTION_STRING = os.getenv('AZURE_STORAGE_CONNECTION_STRING')
 AZURE_CONTAINER_NAME = os.getenv('AZURE_CONTAINER_NAME')
 
-# Azure Storage Client Initialize karein
+# Azure Client Initialize
 try:
     if AZURE_CONNECTION_STRING:
         blob_service_client = BlobServiceClient.from_connection_string(AZURE_CONNECTION_STRING)
-    else:
-        print("Warning: AZURE_STORAGE_CONNECTION_STRING not found.")
 except Exception as e:
-    print(f"Azure Storage Connection Error: {e}")
+    print(f"Azure Storage Client Error: {e}")
 
-# Database aur Login Manager initialize karein
+# Database initialize karein
 db.init_app(app)
 
 # --- AUTO-CREATE TABLES ON STARTUP ---
 with app.app_context():
     try:
         db.create_all()
-        print("Database tables checked/created successfully!")
+        print("Database tables checked/created successfully!") #
     except Exception as e:
-        print(f"Error creating database tables: {e}")
+        print(f"Database Error: {e}")
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -70,26 +75,17 @@ def analyze_image(img_obj):
     tags = []
     try:
         if img_obj.mode != 'RGB': img_obj = img_obj.convert('RGB')
-        
         # Quality Analysis
-        width, height = img_obj.size
-        tags.append("HD ᴴᴰ" if width * height > 1000000 else "SD")
-
+        w, h = img_obj.size
+        tags.append("HD ᴴᴰ" if w * h > 1000000 else "SD")
         # Brightness Analysis
         stat = ImageStat.Stat(img_obj.convert('L'))
-        brightness = stat.mean[0]
-        if brightness > 150: tags.append("Bright ☀️")
-        elif brightness < 80: tags.append("Dark 🌙")
-        else: tags.append("Neutral Lighting ☁️")
-
-        # Color Analysis
+        tags.append("Bright ☀️" if stat.mean[0] > 150 else "Neutral Lighting ☁️")
+        # Color Tone
         img_small = img_obj.resize((1, 1))
         r, g, b = img_small.getpixel((0, 0))
-        if r > g and r > b: tags.append("Warm Tone 🔴")
-        elif b > r and b > g: tags.append("Cool Tone 🔵")
-        else: tags.append("Balanced Color 🎨")
-    except Exception as e:
-        return "Not Analyzed"
+        tags.append("Warm Tone 🔴" if r > b else "Cool Tone 🔵")
+    except: return "Not Analyzed"
     return " | ".join(tags)
 
 # --- ROUTES ---
@@ -102,7 +98,7 @@ def home():
 @app.route('/feed')
 @login_required
 def feed():
-    # Feed par saari photos uploaded time ke mutabiq nazar ayengi
+    # Saari photos upload time ke hisab se dikhayi jayengi
     photos = Photo.query.order_by(Photo.uploaded_at.desc()).all()
     return render_template('feed.html', photos=photos)
 
@@ -116,7 +112,7 @@ def profile(username):
 @app.route('/upload', methods=['GET', 'POST'])
 @login_required
 def creator_dashboard():
-    # Sirf 'creator' role wale upload kar sakte hain
+    # Only Creators can access
     if current_user.role != 'creator':
         flash("Only Creators can upload photos.", 'warning')
         return redirect(url_for('feed'))
@@ -124,29 +120,26 @@ def creator_dashboard():
     if request.method == 'POST':
         file = request.files.get('photo')
         title = request.form.get('title')
-        if file and title and file.filename != '':
+        if file and title:
             try:
                 img = Image.open(file)
                 auto_tags = analyze_image(img)
-                img.thumbnail((1080, 1080))
+                in_mem = io.BytesIO()
+                img.save(in_mem, format='JPEG', optimize=True, quality=85)
+                in_mem.seek(0)
                 
-                in_mem_file = io.BytesIO()
-                img.save(in_mem_file, format='JPEG', optimize=True, quality=85)
-                in_mem_file.seek(0)
-                
-                # Azure par upload karein
+                # Azure Upload
                 blob_name = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{secure_filename(file.filename)}"
                 blob_client = blob_service_client.get_blob_client(container=AZURE_CONTAINER_NAME, blob=blob_name)
-                blob_client.upload_blob(in_mem_file, overwrite=True)
+                blob_client.upload_blob(in_mem, overwrite=True)
                 
                 new_photo = Photo(filename=blob_client.url, title=title, 
                                   caption=request.form.get('caption'), 
                                   location=request.form.get('location'), 
                                   auto_tags=auto_tags, user_id=current_user.id)
-                                  
                 db.session.add(new_photo)
                 db.session.commit()
-                flash('Photo Uploaded successfully!', 'success')
+                flash('Photo Uploaded to Azure successfully!', 'success')
                 return redirect(url_for('profile', username=current_user.username))
             except Exception as e:
                 flash(f"Upload Error: {str(e)}", 'danger')
@@ -155,7 +148,7 @@ def creator_dashboard():
 @app.route('/like/<int:photo_id>', methods=['POST'])
 @login_required
 def toggle_like(photo_id):
-    # Restriction: Creators cannot like photos
+    # Restriction: Creators cannot like
     if current_user.role == 'creator': 
         return jsonify({'liked': False, 'error': 'Creators cannot like photos.'})
         
@@ -185,18 +178,14 @@ def add_comment(photo_id):
     if analysis.sentiment.polarity < -0.3: 
         return jsonify({'success': False, 'message': 'Blocked: Negative content 🚫'})
     
-    sentiment_type = "neutral"
-    if analysis.sentiment.polarity > 0.3: 
-        text += " [AI: Positive]"
-        sentiment_type = "positive"
-    
+    sentiment_type = "positive" if analysis.sentiment.polarity > 0.3 else "neutral"
     db.session.add(Comment(text=text, user_id=current_user.id, photo_id=photo_id))
     db.session.commit()
     
     return jsonify({
         'success': True, 
         'username': current_user.username, 
-        'text': text.split('[AI:')[0], 
+        'text': text, 
         'sentiment': sentiment_type
     })
 
@@ -223,9 +212,12 @@ def register():
 def login():
     if current_user.is_authenticated: return redirect(url_for('feed'))
     if request.method == 'POST':
-        user = User.query.filter_by(username=request.form.get('username')).first()
-        if user and check_password_hash(user.password, request.form.get('password')):
-            if user.role == request.form.get('role'):
+        username = request.form.get('username')
+        password = request.form.get('password')
+        role = request.form.get('role')
+        user = User.query.filter_by(username=username).first()
+        if user and check_password_hash(user.password, password):
+            if user.role == role:
                 login_user(user)
                 return redirect(url_for('feed'))
             else:
