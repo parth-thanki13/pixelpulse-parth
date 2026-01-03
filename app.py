@@ -11,18 +11,7 @@ from textblob import TextBlob
 from PIL import Image, ImageStat
 from dotenv import load_dotenv
 import urllib.parse
-import io
-import logging
-from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
-from flask_login import LoginManager, login_user, login_required, logout_user, current_user
-from werkzeug.utils import secure_filename
-from werkzeug.security import generate_password_hash, check_password_hash
-from models import db, User, Photo, Like, Comment, Save
-from textblob import TextBlob
-from PIL import Image, ImageStat
-from dotenv import load_dotenv
-import urllib.parse
+
 
 # --- AZURE STORAGE LIBRARY ---
 from azure.storage.blob import BlobServiceClient
@@ -121,6 +110,8 @@ def load_user(user_id):
 # --- TEMPLATE FILTERS ---
 @app.template_filter('timeago')
 def timeago(date):
+    if not date: 
+        return "Recently"  # Crash fix: Agar date NULL ho to crash nahi karega
     diff = datetime.utcnow() - date
     s = diff.total_seconds()
     if s < 60: return "Just now"
@@ -166,16 +157,12 @@ def home():
 @app.route('/feed')
 @login_required
 def feed():
-    query = request.args.get('q')
-    if query:
-        search_term = f"%{query}%"
-        photos = Photo.query.join(User).filter(
-            (Photo.title.ilike(search_term)) | (Photo.caption.ilike(search_term)) | 
-            (Photo.location.ilike(search_term)) | (User.username.ilike(search_term))
-        ).order_by(Photo.uploaded_at.desc()).all()
-    else:
+    try:
         photos = Photo.query.order_by(Photo.uploaded_at.desc()).all()
-    return render_template('feed.html', photos=photos)
+        return render_template('feed.html', photos=photos)
+    except Exception as e:
+        logger.error(f"Feed Load Error: {e}")
+        return f"Database Error: {str(e)}"
 
 @app.route('/u/<username>')
 @login_required
