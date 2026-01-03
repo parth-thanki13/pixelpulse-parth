@@ -6,17 +6,17 @@
         <div class="card mb-4 border-1 rounded-1 bg-white shadow-none">
             <div class="p-3 d-flex align-items-center justify-content-between">
                 <div class="d-flex align-items-center gap-2">
-                    <a href="{{ url_for('profile', username=photo.user.username) }}">
+                    <a href="{{ url_for('profile', username=photo.creator.username) }}">
                         <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center border" style="width: 32px; height: 32px; font-size: 12px; overflow: hidden;">
-                            {% if photo.user.avatar %}
-                                <img src="{{ photo.user.avatar if photo.user.avatar.startswith('http') else url_for('static', filename='uploads/' + photo.user.avatar) }}" style="width:100%; height:100%; object-fit:cover;">
+                            {% if photo.creator.avatar %}
+                                <img src="{{ photo.creator.avatar if photo.creator.avatar.startswith('http') else url_for('static', filename='uploads/' + photo.creator.avatar) }}" style="width:100%; height:100%; object-fit:cover;">
                             {% else %}
-                                {{ photo.user.username[0].upper() }}
+                                {{ photo.creator.username[0].upper() }}
                             {% endif %}
                         </div>
                     </a>
-                    <a href="{{ url_for('profile', username=photo.user.username) }}" class="fw-bold text-dark text-decoration-none small">
-                        {{ photo.user.username }}
+                    <a href="{{ url_for('profile', username=photo.creator.username) }}" class="fw-bold text-dark text-decoration-none small">
+                        {{ photo.creator.username }}
                     </a>
                     {% if photo.location %}<span class="text-muted small">• {{ photo.location }}</span>{% endif %}
                 </div>
@@ -27,13 +27,13 @@
             <div class="card-body p-3">
                 <div class="d-flex align-items-center justify-content-between mb-2">
                     <div class="d-flex gap-3">
-                        {% set is_liked = current_user in photo.likes|map(attribute='user') %}
+                        {% set is_liked = photo.is_liked_by(current_user) %}
                         <i id="like-btn-{{ photo.id }}" 
                            class="{{ 'fas text-danger' if is_liked else 'far' }} fa-heart fs-4 cursor-pointer" 
                            onclick="toggleLike('{{ photo.id }}')"></i>
                         <i class="far fa-comment fs-4 cursor-pointer" onclick="document.getElementById('comment-input-{{ photo.id }}').focus()"></i>
                     </div>
-                    {% set is_saved = current_user in photo.saves|map(attribute='user') %}
+                    {% set is_saved = photo.is_saved_by(current_user) %}
                     <i id="save-btn-{{ photo.id }}" 
                        class="{{ 'fas text-dark' if is_saved else 'far' }} fa-bookmark fs-4 cursor-pointer" 
                        onclick="toggleSave('{{ photo.id }}')"></i>
@@ -42,7 +42,7 @@
                 <p class="fw-bold small mb-2"><span id="like-count-{{ photo.id }}">{{ photo.likes.count() }}</span> likes</p>
                 
                 <div class="small mb-3">
-                    <span class="fw-bold">{{ photo.user.username }}</span> 
+                    <span class="fw-bold">{{ photo.creator.username }}</span> 
                     <span class="fw-bold ms-1 text-primary">{{ photo.title }}</span>
                     <p class="text-muted mb-1">{{ photo.caption }}</p>
                     
@@ -83,7 +83,7 @@
 </div>
 
 <script>
-// Hanan's AJAX Logic for Likes
+// Likes
 function toggleLike(photoId) {
     fetch(`/like/${photoId}`, { method: 'POST' })
     .then(res => res.json())
@@ -104,7 +104,7 @@ function toggleLike(photoId) {
     });
 }
 
-// Hanan's AJAX Logic for Saves
+// Saves
 function toggleSave(photoId) {
     fetch(`/save/${photoId}`, { method: 'POST' })
     .then(res => res.json())
@@ -120,7 +120,7 @@ function toggleSave(photoId) {
     });
 }
 
-// Hanan's AJAX Logic for AI-Enhanced Comments
+// Comments
 function submitComment(event, photoId) {
     event.preventDefault();
     const input = document.getElementById(`comment-input-${photoId}`);
@@ -139,7 +139,6 @@ function submitComment(event, photoId) {
             list.appendChild(div);
             input.value = '';
         } else {
-            // Flash error for blocked negative content
             alert(data.message);
         }
     });
