@@ -2,31 +2,52 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8 col-lg-6">
-        <div class="card border p-4">
+        <div class="card border-0 shadow-sm p-4 bg-white">
             <h5 class="fw-bold mb-4">Edit Profile</h5>
+            
             <form method="POST" enctype="multipart/form-data">
-                <div class="d-flex align-items-center gap-3 mb-4 p-3 bg-light rounded">
-                    <div style="width: 50px; height: 50px;">
+                
+                <div class="d-flex align-items-center gap-3 mb-4 p-3 bg-light rounded border">
+                    <div style="width: 50px; height: 50px; overflow: hidden;" class="rounded-circle border">
                         {% if current_user.avatar %}
-                            <img src="{{ url_for('static', filename='uploads/' + current_user.avatar) }}" class="rounded-circle w-100 h-100 object-fit-cover">
+                            <img src="{{ current_user.avatar if current_user.avatar.startswith('http') else url_for('static', filename='uploads/' + current_user.avatar) }}" 
+                                 class="w-100 h-100 object-fit-cover">
                         {% else %}
-                            <i class="fas fa-user-circle fs-1 text-muted"></i>
+                            <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-secondary text-white">
+                                <i class="fas fa-user"></i>
+                            </div>
                         {% endif %}
                     </div>
+                    
                     <div>
                         <h6 class="mb-0 fw-bold">{{ current_user.username }}</h6>
-                        <label for="avatar" class="text-primary small fw-bold cursor-pointer">Change Profile Photo</label>
+                        <label for="avatar" class="text-primary small fw-bold cursor-pointer" style="text-decoration: underline;">
+                            Change Profile Photo
+                        </label>
                         <input type="file" name="avatar" id="avatar" class="d-none" onchange="this.form.submit()">
                     </div>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label small fw-bold">Bio</label>
-                    <textarea name="bio" class="form-control" rows="3">{{ current_user.bio or '' }}</textarea>
+                    <label class="form-label small fw-bold text-muted text-uppercase">Bio</label>
+                    <textarea name="bio" class="form-control border shadow-none" rows="3" placeholder="Tell us about your photography style...">{{ current_user.bio or '' }}</textarea>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-sm px-4">Save Changes</button>
+                <div class="d-flex justify-content-between align-items-center">
+                    <button type="submit" class="btn btn-primary btn-sm px-4 fw-bold rounded-pill">Save Changes</button>
+                    <a href="{{ url_for('profile', username=current_user.username) }}" class="text-muted small text-decoration-none">Cancel</a>
+                </div>
             </form>
+        </div>
+        
+        <div class="card border-0 shadow-sm p-3 mt-3 bg-white">
+            <p class="mb-0 small text-muted">
+                <i class="fas fa-info-circle me-1"></i> 
+                Registered as a <strong>{{ current_user.role.title() }}</strong>. 
+                {% if current_user.role == 'creator' %}
+                    You have cloud upload privileges.
+                {% endif %}
+            </p>
         </div>
     </div>
 </div>
