@@ -157,12 +157,16 @@ def home():
 @app.route('/feed')
 @login_required
 def feed():
-    try:
+    query = request.args.get('q')
+    if query:
+        search_term = f"%{query}%"
+        photos = Photo.query.join(User).filter(
+            (Photo.title.ilike(search_term)) | (Photo.caption.ilike(search_term)) | 
+            (Photo.location.ilike(search_term)) | (User.username.ilike(search_term))
+        ).order_by(Photo.uploaded_at.desc()).all()
+    else:
         photos = Photo.query.order_by(Photo.uploaded_at.desc()).all()
-        return render_template('feed.html', photos=photos)
-    except Exception as e:
-        logger.error(f"Feed Load Error: {e}")
-        return f"Database Error: {str(e)}"
+    return render_template('feed.html', photos=photos)
 
 @app.route('/u/<username>')
 @login_required
